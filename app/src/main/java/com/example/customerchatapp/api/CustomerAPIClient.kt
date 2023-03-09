@@ -10,7 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object CustomerAPIClient {
     val BASE_URL = "https://reqres.in/api/"
 
-    val getCustomerListData: CustomerAPI
+    val getCustomerData: CustomerAPI
         get() {
             val gson = GsonBuilder().setLenient().create()
             val interceptor = HttpLoggingInterceptor()
@@ -28,5 +28,4 @@ object CustomerAPIClient {
 
             return retrofit.create(CustomerAPI::class.java)
         }
-
 }

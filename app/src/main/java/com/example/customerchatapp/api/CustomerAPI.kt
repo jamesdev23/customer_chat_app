@@ -15,6 +15,6 @@ interface CustomerAPI {
 
     @GET("users/{userId}/")
     fun getCustomerInfo(
-        @Path("userId") userID:Int)
+        @Path("userId") userID: String)
             : Call<CustomerInfoResponse>
 }

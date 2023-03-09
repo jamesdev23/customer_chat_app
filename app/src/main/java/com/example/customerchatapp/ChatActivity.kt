@@ -4,31 +4,56 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.appcompat.app.AppCompatActivity
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.customerchatapp.adapter.FriendlyMessageAdapter
 import com.example.customerchatapp.api.CustomerAPIClient
 import com.example.customerchatapp.databinding.ActivityChatBinding
 import com.example.customerchatapp.model.CustomerInfoResponse
+import com.example.customerchatapp.model.FriendlyMessage
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
+import com.squareup.picasso.MemoryPolicy
+import com.squareup.picasso.Picasso
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChatBinding
+    private lateinit var manager: LinearLayoutManager
+    // Firebase instance variables
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseDatabase
+    private lateinit var adapter: FriendlyMessageAdapter
+
+    private val openDocument = registerForActivityResult(MyOpenDocumentContract()) { uri ->
+        uri?.let { onImageSelected(it) }
+    }
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
 
             var message: String? = intent!!.getStringExtra("data")
 
-            Log.i("Pokemon Info", message!!.toString())
+            Log.i("Customer Data", message!!.toString())
 
-            message?.let {
-                getData(message.getCustomerID())
-            }
+            getData(message.toString())
 
-            binding.customerId.setText(message)
         }
     }
 
@@ -37,17 +62,80 @@ class ChatActivity : AppCompatActivity() {
         binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupReceiver(applicationContext)
+        // Initialize Firebase Auth and check if the user is signed in
+        auth = Firebase.auth
+        if (auth.currentUser == null) {
+            // Not signed in, launch the Sign In activity
+            startActivity(Intent(this, SignInActivity::class.java))
+            finish()
+            return
+        }
+
+        // for receiving broadcast from main activity
+        setupReceiver()
+
+
+        // chat codes starts here
+        // Initialize Realtime Database
+        db = Firebase.database
+        val messagesRef = db.reference.child(MESSAGES_CHILD)
+
+        // The FirebaseRecyclerAdapter class and options come from the FirebaseUI library
+        // See: https://github.com/firebase/FirebaseUI-Android
+        val options = FirebaseRecyclerOptions.Builder<FriendlyMessage>()
+            .setQuery(messagesRef, FriendlyMessage::class.java)
+            .build()
+        adapter = FriendlyMessageAdapter(options, getUserName())
+        binding.progressBar.visibility = ProgressBar.INVISIBLE
+        manager = LinearLayoutManager(this)
+        manager.stackFromEnd = true
+        binding.messageRecyclerView.layoutManager = manager
+        binding.messageRecyclerView.adapter = adapter
+
+        // Scroll down when a new message arrives
+        // See MyScrollToBottomObserver for details
+        adapter.registerAdapterDataObserver(
+            MyScrollToBottomObserver(binding.messageRecyclerView, adapter, manager)
+        )
+
+
+        // Disable the send button when there's no text in the input field
+        // See MyButtonObserver for details
+        binding.messageEditText.addTextChangedListener(MyButtonObserver(binding.sendButton))
+
+        // When the send button is clicked, send a text message
+        binding.sendButton.setOnClickListener {
+            val friendlyMessage = FriendlyMessage(
+                binding.messageEditText.text.toString(),
+                getUserName(),
+                getPhotoUrl(),
+                null /* no image */
+            )
+            db.reference.child(MESSAGES_CHILD).push().setValue(friendlyMessage)
+
+            binding.messageEditText.setText("")
+        }
+
+        // When the image button is clicked, launch the image picker
+        binding.addMessageImageView.setOnClickListener {
+            openDocument.launch(arrayOf("image/*"))
+        }
+
     }
 
-    private fun setupReceiver(context: Context){
+    override fun onDestroy() {
+        unregisterReceiver(receiver)
+        super.onDestroy()
+    }
+
+    private fun setupReceiver(){
         val intentFilter = IntentFilter()
         intentFilter.addAction("ph.kodego.md2p.GETDATA")
-        context.registerReceiver(receiver, intentFilter)
+        registerReceiver(receiver, intentFilter)
     }
 
-    private fun getData(id: Int){
-        val call: Call<CustomerInfoResponse> = CustomerAPIClient.getCustomerListData.getCustomerInfo(id)
+    private fun getData(id: String){
+        val call: Call<CustomerInfoResponse> = CustomerAPIClient.getCustomerData.getCustomerInfo(id)
 
         call.enqueue(object : Callback<CustomerInfoResponse> {
             override fun onFailure(call: Call<CustomerInfoResponse>, t: Throwable) {
@@ -60,11 +148,152 @@ class ChatActivity : AppCompatActivity() {
             ) {
                 var response: CustomerInfoResponse = response!!.body()!!
 
+                getCustomerInfos(response)
 
-//                getCustomerInfos(response)
-
-                Log.d("API INFO CALL", response.customer_data.toString())
+                Log.d("API INFO CALL", response.customer_data[0].first_name)
             }
         })
+    }
+
+    private fun getCustomerInfos(response: CustomerInfoResponse){
+        var customerData = response.customer_data
+        var customerFirstName = customerData[0].first_name
+        var customerLastName = customerData[0].last_name
+        var customerAvatarUrl = customerData[0].avatar_url
+
+        Log.i("customer first name", customerFirstName)
+        Log.i("customer last name", customerLastName)
+
+        binding.customerName.text = "$customerFirstName $customerLastName"
+
+        customerAvatarUrl?.let{
+            Picasso
+                .with(applicationContext)
+                .load(it)
+                .memoryPolicy(MemoryPolicy.NO_CACHE)
+                .placeholder(R.drawable.profile)
+                .error(R.drawable.profile)
+                .into(binding.customerAvatar)
+        }
+
+    }
+
+
+
+    public override fun onStart() {
+        super.onStart()
+        // Check if user is signed in.
+        if (auth.currentUser == null) {
+            // Not signed in, launch the Sign In activity
+            startActivity(Intent(this, SignInActivity::class.java))
+            finish()
+            return
+        }
+    }
+
+    private fun getPhotoUrl(): String? {
+        val user = auth.currentUser
+        return user?.photoUrl?.toString()
+    }
+
+    private fun getUserName(): String? {
+        val user = auth.currentUser
+        return if (user != null) {
+            user.displayName
+        } else ANONYMOUS
+    }
+
+    public override fun onPause() {
+        adapter.stopListening()
+        unregisterReceiver(receiver)
+        super.onPause()
+    }
+
+    public override fun onResume() {
+        super.onResume()
+        adapter.startListening()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.sign_out_menu -> {
+                signOut()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun onImageSelected(uri: Uri) {
+        Log.d(TAG, "Uri: $uri")
+        val user = auth.currentUser
+        val tempMessage = FriendlyMessage(null, getUserName(), getPhotoUrl(), LOADING_IMAGE_URL)
+        db.reference
+            .child(MESSAGES_CHILD)
+            .push()
+            .setValue(
+                tempMessage,
+                DatabaseReference.CompletionListener { databaseError, databaseReference ->
+                    if (databaseError != null) {
+                        Log.w(
+                            TAG, "Unable to write message to database.",
+                            databaseError.toException()
+                        )
+                        return@CompletionListener
+                    }
+
+                    // Build a StorageReference and then upload the file
+                    val key = databaseReference.key
+                    val storageReference = Firebase.storage
+                        .getReference(user!!.uid)
+                        .child(key!!)
+                        .child(uri.lastPathSegment!!)
+                    putImageInStorage(storageReference, uri, key)
+                })
+    }
+
+    private fun putImageInStorage(storageReference: StorageReference, uri: Uri, key: String?) {
+        // First upload the image to Cloud Storage
+        storageReference.putFile(uri)
+            .addOnSuccessListener(
+                this
+            ) { taskSnapshot -> // After the image loads, get a public downloadUrl for the image
+                // and add it to the message.
+                taskSnapshot.metadata!!.reference!!.downloadUrl
+                    .addOnSuccessListener { uri ->
+                        val friendlyMessage =
+                            FriendlyMessage(null, getUserName(), getPhotoUrl(), uri.toString())
+                        db.reference
+                            .child(MESSAGES_CHILD)
+                            .child(key!!)
+                            .setValue(friendlyMessage)
+                    }
+            }
+            .addOnFailureListener(this) { e ->
+                Log.w(
+                    TAG,
+                    "Image upload task was unsuccessful.",
+                    e
+                )
+            }
+    }
+
+    private fun signOut() {
+        AuthUI.getInstance().signOut(applicationContext)
+        startActivity(Intent(this, SignInActivity::class.java))
+        finish()
+    }
+
+    companion object {
+        private const val TAG = "ChatActivity"
+        const val MESSAGES_CHILD = "messages"
+        const val ANONYMOUS = "anonymous"
+        private const val LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif"
     }
 }

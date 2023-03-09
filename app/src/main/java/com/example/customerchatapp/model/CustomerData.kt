@@ -40,6 +40,12 @@ class Customer {
 
     @SerializedName("avatar")
     var avatar_url = ""
+
+    constructor(firstname: String, lastname: String, url: String) {
+        this.first_name = firstname
+        this.last_name = lastname
+        this.avatar_url = url
+    }
 }
 
 class CustomerListResponse {
@@ -65,6 +71,9 @@ class CustomerListResponse {
 class CustomerInfoResponse {
     @SerializedName("data")
     var customer_data: ArrayList<Customer> = ArrayList<Customer>()
+
+    @SerializedName("support")
+    var support:Support = Support()
 }
 
 class Support {

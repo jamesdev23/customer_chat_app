@@ -43,6 +43,7 @@ class CustomerListAdapter (private var context: Context,
 //            }
             Intent(context, ChatActivity::class.java).also { intent ->
                 Log.d("Customer ID", "${customers[position].iD}")
+                intent.action = "ph.kodego.md2p.GETDATA"
                 intent.putExtra("data", customers[position].iD)
                 context.sendBroadcast(intent)
 
