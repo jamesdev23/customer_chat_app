@@ -9,14 +9,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:id="@+id/recipient_info"
         android:orientation="horizontal"
-        android:layout_above="@id/messageRecyclerView"
         android:gravity="center"
-        android:padding="5dp">
+        android:padding="10dp">
 
         <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:id="@+id/customer_avatar"
             android:src="@drawable/profile"
             android:contentDescription="Customer Avatar"
@@ -27,11 +27,31 @@
             android:layout_height="wrap_content"
             android:id="@+id/customer_name"
             android:text="Sample Name"
-            android:gravity="center"/>
+            android:textSize="18dp"
+            android:gravity="left"
+            android:layout_marginLeft="10dp"/>
 
     </LinearLayout>
 
 
+
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/messageRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/linearLayout"
+        android:layout_below="@+id/recipient_info"
+        android:background="@android:color/white"
+        android:paddingHorizontal="16dp" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -64,21 +84,7 @@
 
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/messageRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="570dp"
-        android:layout_above="@+id/linearLayout"
-        android:background="@android:color/white"
-        android:paddingHorizontal="16dp" />
 
 
 </RelativeLayout>

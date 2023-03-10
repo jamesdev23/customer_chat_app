@@ -4,12 +4,15 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.customerchatapp.adapter.CustomerListAdapter
 import com.example.customerchatapp.api.CustomerAPIClient
 import com.example.customerchatapp.databinding.ActivityMainBinding
 import com.example.customerchatapp.model.CustomerList
 import com.example.customerchatapp.model.CustomerListResponse
+import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
@@ -30,6 +33,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        supportActionBar?.title = "Select User to Chat"
 
         // Initialize Firebase Auth and check if the user is signed in
         auth = Firebase.auth
@@ -62,6 +67,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.sign_out_menu -> {
+                signOut()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun signOut() {
+        AuthUI.getInstance().signOut(applicationContext)
+        startActivity(Intent(this, SignInActivity::class.java))
+        finish()
+    }
+
     private fun getData(){
         val call: Call<CustomerListResponse> =
             CustomerAPIClient.getCustomerData.getCustomerList(1)
@@ -86,4 +113,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
+
 }

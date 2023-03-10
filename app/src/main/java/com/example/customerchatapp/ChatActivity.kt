@@ -50,9 +50,8 @@ class ChatActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // gets intent from main activity
-        val message = intent
         try{
-            recipientID = message.getIntExtra("data", 1)
+            recipientID = intent!!.getIntExtra("data", 1)
             getData(recipientID)
         }catch(e:Exception){
             Log.e("error", e.toString())
@@ -130,7 +129,11 @@ class ChatActivity : AppCompatActivity() {
                 response: Response<CustomerInfoResponse>
             ) {
                 var response: CustomerInfoResponse = response!!.body()!!
+                var recipientData = response.customer_data
+                var fullname = "${recipientData.first_name} ${recipientData.last_name}"
 
+//                supportActionBar?.show()
+//                supportActionBar?.title = fullname
                 getCustomerInfos(response)
 
                 Log.d("API INFO GETDATA", response.customer_data.first_name)
@@ -194,22 +197,6 @@ class ChatActivity : AppCompatActivity() {
         adapter.startListening()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.sign_out_menu -> {
-                signOut()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     private fun onImageSelected(uri: Uri) {
         Log.d(TAG, "Uri: $uri")
         val user = auth.currentUser
@@ -264,11 +251,7 @@ class ChatActivity : AppCompatActivity() {
             }
     }
 
-    private fun signOut() {
-        AuthUI.getInstance().signOut(applicationContext)
-        startActivity(Intent(this, SignInActivity::class.java))
-        finish()
-    }
+
 
     companion object {
         private const val TAG = "ChatActivity"
