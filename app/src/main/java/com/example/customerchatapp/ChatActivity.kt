@@ -1,9 +1,6 @@
 package com.example.customerchatapp
 
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -40,27 +37,27 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseDatabase
     private lateinit var adapter: FriendlyMessageAdapter
+    private var recipientID:Int = 0
 
     private val openDocument = registerForActivityResult(MyOpenDocumentContract()) { uri ->
         uri?.let { onImageSelected(it) }
     }
 
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-
-            var message: String? = intent!!.getStringExtra("data")
-
-            Log.i("Customer Data", message!!.toString())
-
-            getData(message.toString())
-
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // gets intent from main activity
+        val message = intent
+        try{
+            recipientID = message.getIntExtra("data", 1)
+            getData(recipientID)
+        }catch(e:Exception){
+            Log.e("error", e.toString())
+        }
+
 
         // Initialize Firebase Auth and check if the user is signed in
         auth = Firebase.auth
@@ -70,9 +67,6 @@ class ChatActivity : AppCompatActivity() {
             finish()
             return
         }
-
-        // for receiving broadcast from main activity
-        setupReceiver()
 
 
         // chat codes starts here
@@ -116,25 +110,14 @@ class ChatActivity : AppCompatActivity() {
             binding.messageEditText.setText("")
         }
 
-        // When the image button is clicked, launch the image picker
-        binding.addMessageImageView.setOnClickListener {
-            openDocument.launch(arrayOf("image/*"))
-        }
-
     }
 
     override fun onDestroy() {
-        unregisterReceiver(receiver)
         super.onDestroy()
     }
 
-    private fun setupReceiver(){
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("ph.kodego.md2p.GETDATA")
-        registerReceiver(receiver, intentFilter)
-    }
 
-    private fun getData(id: String){
+    private fun getData(id: Int){
         val call: Call<CustomerInfoResponse> = CustomerAPIClient.getCustomerData.getCustomerInfo(id)
 
         call.enqueue(object : Callback<CustomerInfoResponse> {
@@ -150,21 +133,19 @@ class ChatActivity : AppCompatActivity() {
 
                 getCustomerInfos(response)
 
-                Log.d("API INFO CALL", response.customer_data[0].first_name)
+                Log.d("API INFO GETDATA", response.customer_data.first_name)
             }
         })
     }
 
     private fun getCustomerInfos(response: CustomerInfoResponse){
         var customerData = response.customer_data
-        var customerFirstName = customerData[0].first_name
-        var customerLastName = customerData[0].last_name
-        var customerAvatarUrl = customerData[0].avatar_url
+        var fullName = "${customerData.first_name} ${customerData.last_name}"
+        var customerAvatarUrl = customerData.avatar_url
 
-        Log.i("customer first name", customerFirstName)
-        Log.i("customer last name", customerLastName)
+        Log.i("customer name", fullName)
 
-        binding.customerName.text = "$customerFirstName $customerLastName"
+        binding.customerName.text = "$fullName"
 
         customerAvatarUrl?.let{
             Picasso
@@ -205,7 +186,6 @@ class ChatActivity : AppCompatActivity() {
 
     public override fun onPause() {
         adapter.stopListening()
-        unregisterReceiver(receiver)
         super.onPause()
     }
 

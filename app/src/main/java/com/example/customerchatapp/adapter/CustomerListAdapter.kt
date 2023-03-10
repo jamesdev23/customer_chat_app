@@ -45,7 +45,6 @@ class CustomerListAdapter (private var context: Context,
                 Log.d("Customer ID", "${customers[position].iD}")
                 intent.action = "ph.kodego.md2p.GETDATA"
                 intent.putExtra("data", customers[position].iD)
-                context.sendBroadcast(intent)
 
                 // start the ChatActivity
                 context.startActivity(intent)

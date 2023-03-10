@@ -40,8 +40,6 @@ class FriendlyMessageAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, model: FriendlyMessage) {
         if (options.snapshots[position].text != null) {
             (holder as MessageViewHolder).bind(model)
-        } else {
-            (holder as ImageMessageViewHolder).bind(model)
         }
     }
 
@@ -54,9 +52,9 @@ class FriendlyMessageAdapter(
             binding.messageTextView.text = item.text
             setTextColor(item.name, binding.messageTextView)
 
-            binding.messengerTextView.text = if (item.name == null) ANONYMOUS else item.name
+            binding.messengerTextView.text = item.name ?: ANONYMOUS
             if (item.photoUrl != null) {
-                loadImageIntoView(binding.messengerImageView, item.photoUrl!!)
+                loadImageIntoView(binding.messengerImageView, item.photoUrl)
             } else {
                 binding.messengerImageView.setImageResource(R.drawable.ic_account_circle_black_36dp)
             }
@@ -76,11 +74,11 @@ class FriendlyMessageAdapter(
     inner class ImageMessageViewHolder(private val binding: ImageMessageBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: FriendlyMessage) {
-            loadImageIntoView(binding.messageImageView, item.imageUrl!!)
+            loadImageIntoView(binding.messageImageView, item.imageUrl!!, false)
 
-            binding.messengerTextView.text = if (item.name == null) ANONYMOUS else item.name
+            binding.messengerTextView.text = if (item.name == null) { ANONYMOUS } else { item.name }
             if (item.photoUrl != null) {
-                loadImageIntoView(binding.messengerImageView, item.photoUrl!!)
+                loadImageIntoView(binding.messengerImageView, item.photoUrl)
             } else {
                 binding.messengerImageView.setImageResource(R.drawable.ic_account_circle_black_36dp)
             }

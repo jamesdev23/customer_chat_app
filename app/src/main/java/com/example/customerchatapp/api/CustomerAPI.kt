@@ -13,8 +13,9 @@ interface CustomerAPI {
         @Query("page") startIndex:Int)
             : Call<CustomerListResponse>
 
-    @GET("users/{userId}/")
+    @GET("users/{userId}")
     fun getCustomerInfo(
-        @Path("userId") userID: String)
+        @Path("userId") userID: Int
+    )
             : Call<CustomerInfoResponse>
 }
