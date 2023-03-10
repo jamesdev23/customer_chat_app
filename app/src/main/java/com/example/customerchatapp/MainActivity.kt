@@ -52,7 +52,15 @@ class MainActivity : AppCompatActivity() {
 
         binding.recyclerCustomerList.adapter = customerListAdapter
 
-        getData()
+        getData(1)
+
+        binding.listPrevious.setOnClickListener {
+            getData(1)
+        }
+
+        binding.listNext.setOnClickListener {
+            getData(2)
+        }
 
     }
 
@@ -84,14 +92,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun signOut() {
-        AuthUI.getInstance().signOut(applicationContext)
-        startActivity(Intent(this, SignInActivity::class.java))
-        finish()
+        AuthUI.getInstance().signOut(applicationContext).addOnCompleteListener {
+            startActivity(Intent(this, SignInActivity::class.java))
+            finish()
+        }
     }
 
-    private fun getData(){
+    private fun getData(page: Int){
         val call: Call<CustomerListResponse> =
-            CustomerAPIClient.getCustomerData.getCustomerList(1)
+            CustomerAPIClient.getCustomerData.getCustomerList(page)
 
         call.enqueue(object : Callback<CustomerListResponse> {
             override fun onFailure(call: Call<CustomerListResponse>, t: Throwable) {

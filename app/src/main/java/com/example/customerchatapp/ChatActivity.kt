@@ -37,7 +37,7 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseDatabase
     private lateinit var adapter: FriendlyMessageAdapter
-    private var recipientID:Int = 0
+    private var customerID:Int = 0
 
     private val openDocument = registerForActivityResult(MyOpenDocumentContract()) { uri ->
         uri?.let { onImageSelected(it) }
@@ -51,8 +51,8 @@ class ChatActivity : AppCompatActivity() {
 
         // gets intent from main activity
         try{
-            recipientID = intent!!.getIntExtra("data", 1)
-            getData(recipientID)
+            customerID = intent!!.getIntExtra("data", 1)
+            getData(customerID)
         }catch(e:Exception){
             Log.e("error", e.toString())
         }
@@ -71,7 +71,12 @@ class ChatActivity : AppCompatActivity() {
         // chat codes starts here
         // Initialize Realtime Database
         db = Firebase.database
-        val messagesRef = db.reference.child(MESSAGES_CHILD)
+
+        val sender_name: String? = getUserName()
+        val recipient_id = customerID.toString()
+
+        // db message ref
+        val messagesRef = db.reference.child(MESSAGES_CHILD).child(sender_name!!).child(recipient_id)
 
         // The FirebaseRecyclerAdapter class and options come from the FirebaseUI library
         // See: https://github.com/firebase/FirebaseUI-Android
@@ -98,13 +103,16 @@ class ChatActivity : AppCompatActivity() {
 
         // When the send button is clicked, send a text message
         binding.sendButton.setOnClickListener {
+
             val friendlyMessage = FriendlyMessage(
                 binding.messageEditText.text.toString(),
                 getUserName(),
                 getPhotoUrl(),
                 null /* no image */
             )
-            db.reference.child(MESSAGES_CHILD).push().setValue(friendlyMessage)
+
+            // reference to new messages
+            db.reference.child(MESSAGES_CHILD).child(sender_name!!).child(recipient_id!!).push().setValue(friendlyMessage)
 
             binding.messageEditText.setText("")
         }
@@ -132,11 +140,9 @@ class ChatActivity : AppCompatActivity() {
                 var recipientData = response.customer_data
                 var fullname = "${recipientData.first_name} ${recipientData.last_name}"
 
-//                supportActionBar?.show()
-//                supportActionBar?.title = fullname
                 getCustomerInfos(response)
 
-                Log.d("API INFO GETDATA", response.customer_data.first_name)
+                Log.d("API INFO GETDATA", fullname)
             }
         })
     }
@@ -173,6 +179,9 @@ class ChatActivity : AppCompatActivity() {
             finish()
             return
         }
+
+
+
     }
 
     private fun getPhotoUrl(): String? {
