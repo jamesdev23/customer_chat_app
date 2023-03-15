@@ -4,17 +4,14 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.customerchatapp.adapter.FriendlyMessageAdapter
+import com.example.customerchatapp.adapter.CustomerMessageAdapter
 import com.example.customerchatapp.api.CustomerAPIClient
 import com.example.customerchatapp.databinding.ActivityChatBinding
 import com.example.customerchatapp.model.CustomerInfoResponse
-import com.example.customerchatapp.model.FriendlyMessage
-import com.firebase.ui.auth.AuthUI
+import com.example.customerchatapp.model.CustomerMessage
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -36,7 +33,7 @@ class ChatActivity : AppCompatActivity() {
     // Firebase instance variables
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseDatabase
-    private lateinit var adapter: FriendlyMessageAdapter
+    private lateinit var adapter: CustomerMessageAdapter
     private var customerID:Int = 0
 
     private val openDocument = registerForActivityResult(MyOpenDocumentContract()) { uri ->
@@ -80,10 +77,10 @@ class ChatActivity : AppCompatActivity() {
 
         // The FirebaseRecyclerAdapter class and options come from the FirebaseUI library
         // See: https://github.com/firebase/FirebaseUI-Android
-        val options = FirebaseRecyclerOptions.Builder<FriendlyMessage>()
-            .setQuery(messagesRef, FriendlyMessage::class.java)
+        val options = FirebaseRecyclerOptions.Builder<CustomerMessage>()
+            .setQuery(messagesRef, CustomerMessage::class.java)
             .build()
-        adapter = FriendlyMessageAdapter(options, getUserName())
+        adapter = CustomerMessageAdapter(options, getUserName())
         binding.progressBar.visibility = ProgressBar.INVISIBLE
         manager = LinearLayoutManager(this)
         manager.stackFromEnd = true
@@ -104,7 +101,7 @@ class ChatActivity : AppCompatActivity() {
         // When the send button is clicked, send a text message
         binding.sendButton.setOnClickListener {
 
-            val friendlyMessage = FriendlyMessage(
+            val customerMessage = CustomerMessage(
                 binding.messageEditText.text.toString(),
                 getUserName(),
                 getPhotoUrl(),
@@ -112,7 +109,7 @@ class ChatActivity : AppCompatActivity() {
             )
 
             // reference to new messages
-            db.reference.child(MESSAGES_CHILD).child(sender_name!!).child(recipient_id!!).push().setValue(friendlyMessage)
+            db.reference.child(MESSAGES_CHILD).child(sender_name!!).child(recipient_id!!).push().setValue(customerMessage)
 
             binding.messageEditText.setText("")
         }
@@ -209,7 +206,7 @@ class ChatActivity : AppCompatActivity() {
     private fun onImageSelected(uri: Uri) {
         Log.d(TAG, "Uri: $uri")
         val user = auth.currentUser
-        val tempMessage = FriendlyMessage(null, getUserName(), getPhotoUrl(), LOADING_IMAGE_URL)
+        val tempMessage = CustomerMessage(null, getUserName(), getPhotoUrl(), LOADING_IMAGE_URL)
         db.reference
             .child(MESSAGES_CHILD)
             .push()
@@ -243,12 +240,12 @@ class ChatActivity : AppCompatActivity() {
                 // and add it to the message.
                 taskSnapshot.metadata!!.reference!!.downloadUrl
                     .addOnSuccessListener { uri ->
-                        val friendlyMessage =
-                            FriendlyMessage(null, getUserName(), getPhotoUrl(), uri.toString())
+                        val customerMessage =
+                            CustomerMessage(null, getUserName(), getPhotoUrl(), uri.toString())
                         db.reference
                             .child(MESSAGES_CHILD)
                             .child(key!!)
-                            .setValue(friendlyMessage)
+                            .setValue(customerMessage)
                     }
             }
             .addOnFailureListener(this) { e ->

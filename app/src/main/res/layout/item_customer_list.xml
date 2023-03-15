@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="100dp">
+    android:layout_height="100dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="20dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,6 +17,7 @@
             android:layout_height="100dp"
             android:id="@+id/customerlist_avatar"
             android:layout_weight="2"
+            android:src="@drawable/profile"
             android:contentDescription="customer picture" />
 
         <TextView
@@ -25,14 +27,14 @@
             android:textSize="16sp"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3"/>
+            android:layout_weight="3.5"/>
 
         <Button
             android:id="@+id/btn_chat"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:text="Chat"
-            android:layout_weight="2" />
+            android:layout_weight="1.5" />
 
     </LinearLayout>
 

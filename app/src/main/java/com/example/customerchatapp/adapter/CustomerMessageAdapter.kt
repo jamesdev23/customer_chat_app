@@ -13,16 +13,16 @@ import com.example.customerchatapp.ChatActivity.Companion.ANONYMOUS
 import com.example.customerchatapp.R
 import com.example.customerchatapp.databinding.ImageMessageBinding
 import com.example.customerchatapp.databinding.MessageBinding
-import com.example.customerchatapp.model.FriendlyMessage
+import com.example.customerchatapp.model.CustomerMessage
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 
-class FriendlyMessageAdapter(
-    private val options: FirebaseRecyclerOptions<FriendlyMessage>,
+class CustomerMessageAdapter(
+    private val options: FirebaseRecyclerOptions<CustomerMessage>,
     private val currentUserName: String?
-) : FirebaseRecyclerAdapter<FriendlyMessage, RecyclerView.ViewHolder>(options) {
+) : FirebaseRecyclerAdapter<CustomerMessage, RecyclerView.ViewHolder>(options) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -37,7 +37,7 @@ class FriendlyMessageAdapter(
         }
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, model: FriendlyMessage) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, model: CustomerMessage) {
         if (options.snapshots[position].text != null) {
             (holder as MessageViewHolder).bind(model)
         }
@@ -48,7 +48,7 @@ class FriendlyMessageAdapter(
     }
 
     inner class MessageViewHolder(private val binding: MessageBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: FriendlyMessage) {
+        fun bind(item: CustomerMessage) {
             binding.messageTextView.text = item.text
             setTextColor(item.name, binding.messageTextView)
 
@@ -73,7 +73,7 @@ class FriendlyMessageAdapter(
 
     inner class ImageMessageViewHolder(private val binding: ImageMessageBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: FriendlyMessage) {
+        fun bind(item: CustomerMessage) {
             loadImageIntoView(binding.messageImageView, item.imageUrl!!, false)
 
             binding.messengerTextView.text = if (item.name == null) { ANONYMOUS } else { item.name }

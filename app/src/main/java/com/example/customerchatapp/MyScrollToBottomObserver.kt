@@ -2,11 +2,11 @@ package com.example.customerchatapp
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.customerchatapp.adapter.FriendlyMessageAdapter
+import com.example.customerchatapp.adapter.CustomerMessageAdapter
 
 class MyScrollToBottomObserver(
     private val recycler: RecyclerView,
-    private val adapter: FriendlyMessageAdapter,
+    private val adapter: CustomerMessageAdapter,
     private val manager: LinearLayoutManager
 ) : RecyclerView.AdapterDataObserver() {
     override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
